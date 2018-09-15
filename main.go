@@ -5,6 +5,7 @@
 // DBMS: "PostgreSQL"
 // Schema: "public"
 // Table: "users"
+// Columns: "id serial, fname text, lname text, dob text, email text, phono_no bigint"
 
 package main
 
@@ -144,7 +145,7 @@ func EditUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(user); err != nil {
+	if err := json.NewEncoder(w).Encode(nil); err != nil {
 		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
 		log.Fatalf("error encoding data: %v", err)
 		return
@@ -170,7 +171,11 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(nil)
+	if err := json.NewEncoder(w).Encode(nil); err != nil {
+		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
+		log.Fatalf("error encoding data: %v", err)
+		return
+	}
 }
 
 func main() {
