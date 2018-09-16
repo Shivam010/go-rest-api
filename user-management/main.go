@@ -43,6 +43,30 @@ type User struct {
 	PhoneNo int64  `json:"phoneno"`
 }
 
+// RequestHandlerFunc is the type defined to use the http Handler Function externally
+type RequestHandlerFunc func(http.ResponseWriter, *http.Request)
+
+// wrapper wraps the http request with sequence of middlewares provided
+func wrapper(fn RequestHandlerFunc, mds ...func(RequestHandlerFunc) RequestHandlerFunc) RequestHandlerFunc {
+	for _, md := range mds {
+		fn = md(fn)
+	}
+	return fn
+}
+
+// BasicAuthentication middleware
+func BasicAuthentication(req RequestHandlerFunc) RequestHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("WWW-Authenticate", `Basic Realm: "Restricted"`)
+		user, pass, ok := r.BasicAuth()
+		if !ok || (ok && (user != "mavis" || pass != "shivam")) {
+			http.Error(w, "Unauthorized Access", http.StatusUnauthorized)
+			return
+		}
+		req(w, r)
+	}
+}
+
 // CreateUser create user
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -193,11 +217,11 @@ func main() {
 	defer db.Close()
 
 	// api pattern handlers
-	http.HandleFunc("/create", CreateUser) // POST
-	http.HandleFunc("/user", GetUser)      // GET
-	http.HandleFunc("/users", GetAllUser)  // GET
-	http.HandleFunc("/edit", EditUser)     // PUT
-	http.HandleFunc("/delete", DeleteUser) // DELETE
+	http.HandleFunc("/create", wrapper(CreateUser, BasicAuthentication)) // POST
+	http.HandleFunc("/user", wrapper(GetUser, BasicAuthentication))      // GET
+	http.HandleFunc("/users", wrapper(GetAllUser, BasicAuthentication))  // GET
+	http.HandleFunc("/edit", wrapper(EditUser, BasicAuthentication))     // PUT
+	http.HandleFunc("/delete", wrapper(DeleteUser, BasicAuthentication)) // DELETE
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalf("server error: %v", err)
