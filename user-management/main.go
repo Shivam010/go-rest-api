@@ -3,7 +3,7 @@
 
 // Database Structure
 // DBMS: "PostgreSQL"
-// Schema: "public"
+// Schema: "user_management"
 // Table: "users"
 // Columns: "id serial, fname text, lname text, dob text, email text, phono_no bigint"
 
@@ -80,7 +80,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println(user)
-	const query = `INSERT INTO public.users(fname, lname, dob, email, phone_no) VALUES($1, $2, $3, $4, $5) returning id`
+	const query = `INSERT INTO user_management.users(fname, lname, dob, email, phone_no) VALUES($1, $2, $3, $4, $5) returning id`
 	err = db.QueryRow(query, user.Fname, user.Lname, user.DOB, user.Email, user.PhoneNo).Scan(&user.ID)
 	if err != nil {
 		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
@@ -102,7 +102,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := r.URL.Query().Get("id")
-	const query = `SELECT * FROM public.users WHERE id = $1`
+	const query = `SELECT * FROM user_management.users WHERE id = $1`
 	row := db.QueryRow(query, id)
 	user := User{}
 	row.Scan(&user.Fname, &user.Lname, &user.DOB, &user.Email, &user.PhoneNo, &user.ID)
@@ -120,7 +120,7 @@ func GetAllUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
 	}
-	const query = `SELECT * FROM public.users`
+	const query = `SELECT * FROM user_management.users`
 	rows, err := db.Query(query)
 	if err != nil {
 		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
@@ -161,7 +161,7 @@ func EditUser(w http.ResponseWriter, r *http.Request) {
 	}
 	user.ID = id
 	fmt.Println(user)
-	const query = `UPDATE public.users SET fname=$2, lname=$3, dob=$4, email=$5, phone_no=$6 WHERE id = $1;`
+	const query = `UPDATE user_management.users SET fname=$2, lname=$3, dob=$4, email=$5, phone_no=$6 WHERE id = $1;`
 	_, err = db.Exec(query, user.ID, user.Fname, user.Lname, user.DOB, user.Email, user.PhoneNo)
 	if err != nil {
 		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
@@ -188,7 +188,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("error in string conversion: %v", err)
 		return
 	}
-	const query = `DELETE FROM public.users WHERE id = $1`
+	const query = `DELETE FROM user_management.users WHERE id = $1`
 	if _, err = db.Exec(query, id); err != nil {
 		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
 		log.Fatalf("error: %v", err)
