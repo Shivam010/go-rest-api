@@ -1,0 +1,276 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Todos API",
+    "version": "1.0",
+    "contact": {
+      "name": "Sri Krishna Paritala",
+      "email": "srikrishna@appointy.com"
+    }
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/todolist": {
+      "post": {
+        "operationId": "AddTodoList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/todoTodoList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/todoTodoList"
+            }
+          }
+        ],
+        "tags": [
+          "Todos"
+        ]
+      }
+    },
+    "/todolist/{id}": {
+      "delete": {
+        "operationId": "DeleteTodoList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "Todos"
+        ]
+      },
+      "patch": {
+        "operationId": "EditTodoListName",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/todoEditTodoListNameRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Todos"
+        ]
+      }
+    },
+    "/todolist:addItem": {
+      "post": {
+        "operationId": "AddTodoItem",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/todoTodoItem"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/todoAddTodoItemRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Todos"
+        ]
+      }
+    },
+    "/todolist:deleteItem/{id}": {
+      "delete": {
+        "operationId": "DeleteTodoListItem",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "Todos"
+        ]
+      }
+    },
+    "/todolist:getItem/{id}": {
+      "get": {
+        "operationId": "GetTodoListItem",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/todoTodoItem"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "Todos"
+        ]
+      }
+    },
+    "/todolist:updateItem": {
+      "put": {
+        "operationId": "UpdateTodoItem",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/todoTodoItem"
+            }
+          }
+        ],
+        "tags": [
+          "Todos"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufEmpty": {
+      "type": "object",
+      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
+      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    },
+    "todoAddTodoItemRequest": {
+      "type": "object",
+      "properties": {
+        "item": {
+          "$ref": "#/definitions/todoTodoItem"
+        },
+        "list_id": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "todoEditTodoListNameRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "todoTodoItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "value": {
+          "type": "string"
+        },
+        "completed": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "todoTodoList": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/todoTodoItem"
+          }
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "BasicAuth": {
+      "type": "basic"
+    }
+  }
+}
