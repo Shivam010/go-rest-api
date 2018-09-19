@@ -1,8 +1,10 @@
 # go-rest-api
-Simple examples of HTTP - JSON REST API in Go Language(golang).
+Simple examples of HTTP - JSON REST API in Go Language(golang) using PostgreSQL database.
+- USER MANAGEMENT
+---
 
-The first example API is based on user-management.
-
+USER MANAGEMENT
+---
 It is designed and developed to implement following operations:
 - Create User: To create a new user
 - Get User: To get the required user using its UserID
