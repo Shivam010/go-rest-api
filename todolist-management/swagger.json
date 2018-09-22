@@ -42,9 +42,7 @@
         "tags": [
           "Todos"
         ]
-      }
-    },
-    "/todolist/{id}": {
+      },
       "delete": {
         "operationId": "DeleteTodoList",
         "responses": {
@@ -58,7 +56,7 @@
         "parameters": [
           {
             "name": "id",
-            "in": "path",
+            "in": "query",
             "required": true,
             "type": "integer",
             "format": "int32"
@@ -81,7 +79,7 @@
         "parameters": [
           {
             "name": "id",
-            "in": "path",
+            "in": "query",
             "required": true,
             "type": "integer",
             "format": "int32"
@@ -100,7 +98,7 @@
         ]
       }
     },
-    "/todolist:addItem": {
+    "/todolist/addItem": {
       "post": {
         "operationId": "AddTodoItem",
         "responses": {
@@ -126,7 +124,7 @@
         ]
       }
     },
-    "/todolist:deleteItem/{id}": {
+    "/todolist/deleteItem": {
       "delete": {
         "operationId": "DeleteTodoListItem",
         "responses": {
@@ -140,7 +138,7 @@
         "parameters": [
           {
             "name": "id",
-            "in": "path",
+            "in": "query",
             "required": true,
             "type": "integer",
             "format": "int32"
@@ -151,7 +149,7 @@
         ]
       }
     },
-    "/todolist:getItem/{id}": {
+    "/todolist/getItem": {
       "get": {
         "operationId": "GetTodoListItem",
         "responses": {
@@ -165,7 +163,7 @@
         "parameters": [
           {
             "name": "id",
-            "in": "path",
+            "in": "query",
             "required": true,
             "type": "integer",
             "format": "int32"
@@ -176,7 +174,7 @@
         ]
       }
     },
-    "/todolist:updateItem": {
+    "/todolist/updateItem": {
       "put": {
         "operationId": "UpdateTodoItem",
         "responses": {
@@ -195,6 +193,31 @@
             "schema": {
               "$ref": "#/definitions/todoTodoItem"
             }
+          }
+        ],
+        "tags": [
+          "Todos"
+        ]
+      }
+    },
+    "/todolist/getList": {
+      "get": {
+        "operationId": "GetTodoList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/todoTodoList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [

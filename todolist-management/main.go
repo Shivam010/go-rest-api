@@ -1,18 +1,16 @@
-// A Simple Demo GoLang HTTP JSON API for User-Management
-// Capable of Creating a user, Returning it, Editing it, and Deleting it.
+// A Simple Demo GoLang HTTP JSON API for ToDo List Management
 
 // Database Structure
 // DBMS: "PostgreSQL"
-// Schema: "public"
-// Table: "users"
+// Schema: "todolist_management"
+// Table: "todolist"
 // Columns: "id serial, fname text, lname text, dob text, email text, phono_no bigint"
 
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
-	"fmt"
+	"go-rest-api/todolist-management/lib"
 	"log"
 	"net/http"
 	"strconv"
@@ -20,208 +18,206 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var (
-	db  *sql.DB
-	err error
-)
-
-const (
-	dbHost     = "localhost"
-	dbPort     = "5432"
-	dbUser     = "postgres"
-	dbPassword = "appointy"
-	dbName     = "test"
-)
-
-// User Object
-type User struct {
-	ID      int64  `json:"id"`
-	Fname   string `json:"fname"`
-	Lname   string `json:"lname"`
-	DOB     string `json:"dob"`
-	Email   string `json:"email"`
-	PhoneNo int64  `json:"phoneno"`
+// TodoListManagement ...
+type TodoListManagement struct {
+	c *todolist.Core
 }
 
-// RequestHandlerFunc is the type defined to use the http Handler Function externally
-type RequestHandlerFunc func(http.ResponseWriter, *http.Request)
+// NewTodoListManagement ...
+func NewTodoListManagement(c *todolist.Core) *TodoListManagement {
+	return &TodoListManagement{c}
+}
 
-// wrapper wraps the http request with sequence of middlewares provided
-func wrapper(fn RequestHandlerFunc, mds ...func(RequestHandlerFunc) RequestHandlerFunc) RequestHandlerFunc {
-	for _, md := range mds {
-		fn = md(fn)
+// Ex ...
+func (t *TodoListManagement) Ex(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "404 not found.", http.StatusNotFound)
+		return
 	}
-	return fn
+	if err := t.c.Ex("name"); err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	ReturnJSONEncoded(w, "Ex Call")
 }
 
-// BasicAuthentication middleware
-func BasicAuthentication(req RequestHandlerFunc) RequestHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("WWW-Authenticate", `Basic Realm: "Restricted"`)
-		user, pass, ok := r.BasicAuth()
-		if !ok || (ok && (user != "mavis" || pass != "shivam")) {
-			http.Error(w, "Unauthorized Access", http.StatusUnauthorized)
-			return
-		}
-		req(w, r)
+// AddDeleteOrEdit ...
+func (t *TodoListManagement) AddDeleteOrEdit(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		t.AddTodoList(w, r)
+	} else if r.Method == "DELETE" {
+		t.DeleteTodoList(w, r)
+	} else if r.Method == "PATCH" {
+		t.EditTodoListName(w, r)
+	} else {
+		http.Error(w, "404 not found.", http.StatusNotFound)
 	}
 }
 
-// CreateUser create user
-func CreateUser(w http.ResponseWriter, r *http.Request) {
+// AddTodoList ...
+func (t *TodoListManagement) AddTodoList(w http.ResponseWriter, r *http.Request) {
+	list := &todolist.TodoList{}
+	if err := json.NewDecoder(r.Body).Decode(list); err != nil {
+		InternalServerError(w, err)
+		return
+	}
+
+	obj, err := t.c.AddTodoList(list)
+	if err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	ReturnJSONEncoded(w, obj)
+}
+
+// DeleteTodoList ...
+func (t *TodoListManagement) DeleteTodoList(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	if err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	if err := t.c.DeleteTodoList(id); err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	ReturnJSONEncoded(w, empty{})
+}
+
+// EditTodoListName ...
+func (t *TodoListManagement) EditTodoListName(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	if err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	list := &todolist.TodoList{}
+	if err := json.NewDecoder(r.Body).Decode(list); err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	if err := t.c.EditTodoListName(id, list.Name); err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	ReturnJSONEncoded(w, empty{})
+}
+
+// AddTodoItem ...
+func (t *TodoListManagement) AddTodoItem(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
 	}
-	user := &User{}
-	if err := json.NewDecoder(r.Body).Decode(user); err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("error decoding data: %v", err)
+	type Req struct {
+		Lid  int64              `json:"list_id"`
+		Item *todolist.TodoItem `json:"item"`
+	}
+	req := &Req{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		InternalServerError(w, err)
 		return
 	}
-	fmt.Println(user)
-	const query = `INSERT INTO public.users(fname, lname, dob, email, phone_no) VALUES($1, $2, $3, $4, $5) returning id`
-	err = db.QueryRow(query, user.Fname, user.Lname, user.DOB, user.Email, user.PhoneNo).Scan(&user.ID)
+	item, err := t.c.AddTodoItem(req.Lid, req.Item)
 	if err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("create user error: %v", err)
+		InternalServerError(w, err)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(user); err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("error encoding data: %v", err)
-		return
-	}
+	ReturnJSONEncoded(w, item)
 }
 
-// GetUser returns a user
-func GetUser(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, "404 not found.", http.StatusNotFound)
-		return
-	}
-	id := r.URL.Query().Get("id")
-	const query = `SELECT * FROM public.users WHERE id = $1`
-	row := db.QueryRow(query, id)
-	user := User{}
-	row.Scan(&user.Fname, &user.Lname, &user.DOB, &user.Email, &user.PhoneNo, &user.ID)
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(user); err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("error encoding data: %v", err)
-		return
-	}
-}
-
-// GetAllUser returns all user
-func GetAllUser(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, "404 not found.", http.StatusNotFound)
-		return
-	}
-	const query = `SELECT * FROM public.users`
-	rows, err := db.Query(query)
-	if err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("error: %v", err)
-		return
-	}
-	list := []User{}
-	for rows.Next() {
-		user := User{}
-		rows.Scan(&user.Fname, &user.Lname, &user.DOB, &user.Email, &user.PhoneNo, &user.ID)
-		list = append(list, user)
-	}
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(list); err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("error encoding data: %v", err)
-		return
-	}
-}
-
-// EditUser edit a user
-func EditUser(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "PUT" {
-		http.Error(w, "404 not found.", http.StatusNotFound)
-		return
-	}
-	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
-	if err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("error in string conversion: %v", err)
-		return
-	}
-	user := &User{}
-	if err := json.NewDecoder(r.Body).Decode(user); err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("error encoding data: %v", err)
-		return
-	}
-	user.ID = id
-	fmt.Println(user)
-	const query = `UPDATE public.users SET fname=$2, lname=$3, dob=$4, email=$5, phone_no=$6 WHERE id = $1;`
-	_, err = db.Exec(query, user.ID, user.Fname, user.Lname, user.DOB, user.Email, user.PhoneNo)
-	if err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("error: %v", err)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(nil); err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("error encoding data: %v", err)
-		return
-	}
-}
-
-// DeleteUser deletes a user
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
+// DeleteTodoListItem ...
+func (t *TodoListManagement) DeleteTodoListItem(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "DELETE" {
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
 	}
 	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
 	if err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("error in string conversion: %v", err)
+		InternalServerError(w, err)
 		return
 	}
-	const query = `DELETE FROM public.users WHERE id = $1`
-	if _, err = db.Exec(query, id); err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("error: %v", err)
+	if err := t.c.DeleteTodoListItem(id); err != nil {
+		InternalServerError(w, err)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(nil); err != nil {
-		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Fatalf("error encoding data: %v", err)
+	ReturnJSONEncoded(w, empty{})
+}
+
+// GetTodoListItem ...
+func (t *TodoListManagement) GetTodoListItem(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
 	}
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	if err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	item, err := t.c.GetTodoListItem(id)
+	if err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	ReturnJSONEncoded(w, item)
+}
+
+// UpdateTodoItem ...
+func (t *TodoListManagement) UpdateTodoItem(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "PUT" {
+		http.Error(w, "404 not found.", http.StatusNotFound)
+		return
+	}
+	item := &todolist.TodoItem{}
+	if err := json.NewDecoder(r.Body).Decode(item); err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	if err := t.c.UpdateTodoItem(item); err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	ReturnJSONEncoded(w, empty{})
+}
+
+// GetTodoList ...
+func (t *TodoListManagement) GetTodoList(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "404 not found.", http.StatusNotFound)
+		return
+	}
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	if err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	list, err := t.c.GetTodoList(id)
+	if err != nil {
+		InternalServerError(w, err)
+		return
+	}
+	ReturnJSONEncoded(w, list)
 }
 
 func main() {
 	// database connection
-	dbinfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPassword, dbName)
-	db, err = sql.Open("postgres", dbinfo)
+	db, err := DatabaseConnection()
 	if err != nil {
-		log.Fatalf("db connection error: %v", err)
-		return
-	}
-	if err := db.Ping(); err != nil {
-		log.Fatalf("db ping error: %v", err)
 		return
 	}
 	defer db.Close()
 
+	tdm := NewTodoListManagement(todolist.NewCore(db))
+
 	// api pattern handlers
-	http.HandleFunc("/create", wrapper(CreateUser, BasicAuthentication)) // POST
-	http.HandleFunc("/user", wrapper(GetUser, BasicAuthentication))      // GET
-	http.HandleFunc("/users", wrapper(GetAllUser, BasicAuthentication))  // GET
-	http.HandleFunc("/edit", wrapper(EditUser, BasicAuthentication))     // PUT
-	http.HandleFunc("/delete", wrapper(DeleteUser, BasicAuthentication)) // DELETE
+	http.HandleFunc("/ex", Wrapper(tdm.Ex, BasicAuthentication))
+	http.HandleFunc("/todolist", Wrapper(tdm.AddDeleteOrEdit, BasicAuthentication))
+	http.HandleFunc("/todolist/addItem", Wrapper(tdm.AddTodoItem, BasicAuthentication))
+	http.HandleFunc("/todolist/deleteItem", Wrapper(tdm.DeleteTodoListItem, BasicAuthentication))
+	http.HandleFunc("/todolist/getItem", Wrapper(tdm.GetTodoListItem, BasicAuthentication))
+	http.HandleFunc("/todolist/updateItem", Wrapper(tdm.UpdateTodoItem, BasicAuthentication))
+	http.HandleFunc("/todolist/getList", Wrapper(tdm.GetTodoList, BasicAuthentication))
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalf("server error: %v", err)
