@@ -102,7 +102,10 @@
         "operationId": "EditUser",
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
           }
         },
         "parameters": [
@@ -132,7 +135,10 @@
         "operationId": "DeleteUser",
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
           }
         },
         "parameters": [
@@ -151,6 +157,11 @@
     }
   },
   "definitions": {
+    "protobufEmpty": {
+      "type": "object",
+      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
+      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    },
     "user": {
       "type": "object",
       "properties": {

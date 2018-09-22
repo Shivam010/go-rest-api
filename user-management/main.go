@@ -43,6 +43,9 @@ type User struct {
 	PhoneNo int64  `json:"phoneno"`
 }
 
+type empty struct {
+}
+
 // RequestHandlerFunc is the type defined to use the http Handler Function externally
 type RequestHandlerFunc func(http.ResponseWriter, *http.Request)
 
@@ -101,7 +104,12 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
 	}
-	id := r.URL.Query().Get("id")
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
+		log.Fatalf("error in string conversion: %v", err)
+		return
+	}
 	const query = `SELECT * FROM user_management.users WHERE id = $1`
 	row := db.QueryRow(query, id)
 	user := User{}
@@ -169,7 +177,7 @@ func EditUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(nil); err != nil {
+	if err := json.NewEncoder(w).Encode(empty{}); err != nil {
 		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
 		log.Fatalf("error encoding data: %v", err)
 		return
@@ -195,7 +203,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(nil); err != nil {
+	if err := json.NewEncoder(w).Encode(empty{}); err != nil {
 		http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
 		log.Fatalf("error encoding data: %v", err)
 		return
