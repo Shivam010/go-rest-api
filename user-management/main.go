@@ -225,11 +225,11 @@ func main() {
 	defer db.Close()
 
 	// api pattern handlers
-	http.HandleFunc("/create", wrapper(CreateUser, BasicAuthentication)) // POST
-	http.HandleFunc("/user", wrapper(GetUser, BasicAuthentication))      // GET
-	http.HandleFunc("/users", wrapper(GetAllUser, BasicAuthentication))  // GET
-	http.HandleFunc("/edit", wrapper(EditUser, BasicAuthentication))     // PUT
-	http.HandleFunc("/delete", wrapper(DeleteUser, BasicAuthentication)) // DELETE
+	http.HandleFunc("/create", CreateUser) // wrapper(CreateUser, BasicAuthentication)) // POST
+	http.HandleFunc("/user", GetUser)      // wrapper(GetUser, BasicAuthentication))      // GET
+	http.HandleFunc("/users", GetAllUser)  // wrapper(GetAllUser, BasicAuthentication))  // GET
+	http.HandleFunc("/edit", EditUser)     // wrapper(EditUser, BasicAuthentication))     // PUT
+	http.HandleFunc("/delete", DeleteUser) // wrapper(DeleteUser, BasicAuthentication)) // DELETE
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalf("server error: %v", err)
