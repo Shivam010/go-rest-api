@@ -212,13 +212,13 @@ func main() {
 	tdm := NewTodoListManagement(todolist.NewCore(db))
 
 	// api pattern handlers
-	http.HandleFunc("/ex", Wrapper(tdm.Ex, BasicAuthentication))
-	http.HandleFunc("/todolist", Wrapper(tdm.AddDeleteOrEdit, BasicAuthentication))
-	http.HandleFunc("/todolist/addItem", Wrapper(tdm.AddTodoItem, BasicAuthentication))
-	http.HandleFunc("/todolist/deleteItem", Wrapper(tdm.DeleteTodoListItem, BasicAuthentication))
-	http.HandleFunc("/todolist/getItem", Wrapper(tdm.GetTodoListItem, BasicAuthentication))
-	http.HandleFunc("/todolist/updateItem", Wrapper(tdm.UpdateTodoItem, BasicAuthentication))
-	http.HandleFunc("/todolist/getList", Wrapper(tdm.GetTodoList, BasicAuthentication))
+	http.HandleFunc("/ex", Wrapper(tdm.Ex, BasicAuthentication))                                  // GET
+	http.HandleFunc("/todolist", Wrapper(tdm.AddDeleteOrEdit, BasicAuthentication))               // POST | DELETE | PATCH
+	http.HandleFunc("/todolist/addItem", Wrapper(tdm.AddTodoItem, BasicAuthentication))           // POST
+	http.HandleFunc("/todolist/deleteItem", Wrapper(tdm.DeleteTodoListItem, BasicAuthentication)) // DELETE
+	http.HandleFunc("/todolist/getItem", Wrapper(tdm.GetTodoListItem, BasicAuthentication))       // GET
+	http.HandleFunc("/todolist/updateItem", Wrapper(tdm.UpdateTodoItem, BasicAuthentication))     // PUT
+	http.HandleFunc("/todolist/getList", tdm.GetTodoList)                                         // Wrapper(tdm.GetTodoList, BasicAuthentication)) GET
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalf("server error: %v", err)
