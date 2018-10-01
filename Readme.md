@@ -20,6 +20,15 @@ A user has following information attributes:
 - Email
 - Phone Number
 
+To access the api use: 
+- Create User: A POST request at https://userapi010.herokuapp.com/create 
+- Get User: A GET request at https://userapi010.herokuapp.com/user?id={id}
+- GetAll User: A GET request at https://userapi010.herokuapp.com/users
+- Edit User: A PUT request at https://userapi010.herokuapp.com/edit?id={id}
+- Delete User: A DELETE request at https://userapi010.herokuapp.com/delete?id={id}
+
+The api: https://userapi010.herokuapp.com doesn't implement any auth service and hence, can be used by anyone.
+
 ---
 
 TODOLIST MANAGEMENT
