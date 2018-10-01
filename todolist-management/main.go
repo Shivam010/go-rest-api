@@ -212,7 +212,7 @@ func main() {
 	tdm := NewTodoListManagement(todolist.NewCore(db))
 
 	// api pattern handlers
-	http.HandleFunc("/ex", Wrapper(tdm.Ex, BasicAuthentication))                                  // GET
+	http.HandleFunc("/ex", tdm.Ex)                                                                // Wrapper(tdm.Ex, BasicAuthentication)) GET
 	http.HandleFunc("/todolist", Wrapper(tdm.AddDeleteOrEdit, BasicAuthentication))               // POST | DELETE | PATCH
 	http.HandleFunc("/todolist/addItem", Wrapper(tdm.AddTodoItem, BasicAuthentication))           // POST
 	http.HandleFunc("/todolist/deleteItem", Wrapper(tdm.DeleteTodoListItem, BasicAuthentication)) // DELETE
